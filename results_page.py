@@ -671,10 +671,10 @@ def page_Results():
     warnings = get_warnings(sim, inputs)
     recs = get_recommendations(sim, inputs, yld, water)
 
-    st.title("📊 Results")
-    st.caption(
-        f"**{inputs['crop']}** on **{inputs['farmsize']:g} acres** of **{inputs['soil']}** soil · "
-        f"planted {fmt_date(inputs['plant_date'])} · location {inputs['lat']:.2f}, {inputs['lng']:.2f}")
+    from style import hero
+    hero("📊", "Results",
+         f"{inputs['crop']} on {inputs['farmsize']:g} acres of {inputs['soil']} soil · "
+         f"planted {fmt_date(inputs['plant_date'])} · location {inputs['lat']:.2f}, {inputs['lng']:.2f}")
     if demo:
         st.info("Showing demo data. Run the simulation for real results.")
 

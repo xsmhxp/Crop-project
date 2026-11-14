@@ -1,33 +1,38 @@
+# Simulation page: the season day by day (slider, health, stage, charts)
+
 import altair as alt
 import pandas as pd
 import streamlit as st
 
 from crops import CROPS
 from results_page import fake_sim, COLORS, health_color
+from style import hero
 
 
 def page_Simulation():
-    st.title("🌱 Simulation")
     if "data" not in st.session_state:
+        hero("🌱", "Simulation", "Watch your crop grow, day by day.")
         st.info("Fill in the Plan page first.")
         return
     data = st.session_state.data
+
+    # Daily simulation table (demo data for now, backend later)
     sim = fake_sim(120, data)
     st.session_state.sim = sim
 
-    st.caption(
-        f"**{data['crop']}** on **{data['farmsize']:g} acres** of **{data['soil']}** soil · "
-        f"planted {data['plant_date']:%d %b %Y} · {data['water']:,.0f} m³ water per week")
+    hero("🌱", "Simulation",
+         f"{data['crop']} on {data['farmsize']:g} acres of {data['soil']} soil · "
+         f"planted {data['plant_date']:%d %b %Y} · {data['water']:,.0f} m³ water per week")
     st.info("Showing demo data")
 
-    # ---------------- Pick a day ----------------
+    # Day slider
     with st.container(border=True):
         st.subheader("📅 Pick a day in the season")
         day = st.slider("Day", 1, len(sim), 1, label_visibility="collapsed")
         row = sim.iloc[day - 1]
         st.progress(day / len(sim), text=f"Day {day} of {len(sim)} · {row['date']:%d %b %Y}")
 
-    # ---------------- That day ----------------
+    # Emoji for the growth stage
     stage = row["stage"]
     if stage in ("germinating", "seedling"):
         emoji = "🌱"
@@ -44,6 +49,7 @@ def page_Simulation():
 
     left, right = st.columns([1, 2])
 
+    # Health score + stage
     with left:
         with st.container(border=True):
             st.subheader("❤️ Crop health")
@@ -60,6 +66,7 @@ def page_Simulation():
             if stage == "wilting":
                 st.error("The crop is wilting: it needs water now!")
 
+    # That day's numbers
     with right:
         with st.container(border=True):
             st.subheader("📊 On this day")
@@ -68,11 +75,11 @@ def page_Simulation():
             b.metric("🌡️ Max temperature", f"{row['t_max']:.1f} °C")
             c.metric("🌧️ Rain", f"{row['rain_mm']:.1f} mm")
             a, b, c = st.columns(3)
-            a.metric("🧂 Salinity", f"{row['salinity_ds_m']:.2f} dS/m")
+            a.metric("🧂 Salinity (dS/m)", f"{row['salinity_ds_m']:.2f}")
             b.metric("⚠️ Water stress", f"{row['water_stress']:.0%}")
             c.metric("⏳ Days to harvest", len(sim) - day)
 
-    # ---------------- Charts ----------------
+    # Season charts (white line = selected day)
     marker = (
         alt.Chart(pd.DataFrame({"x": [day]}))
         .mark_rule(color="white", strokeWidth=2)
@@ -108,7 +115,7 @@ def page_Simulation():
                 )
                 .properties(height=300)
             )
-            heat = (
+            heat = (  # 35 °C heat limit
                 alt.Chart(pd.DataFrame({"y": [35]}))
                 .mark_rule(color=COLORS["bad"], strokeDash=[5, 5])
                 .encode(y="y:Q")
