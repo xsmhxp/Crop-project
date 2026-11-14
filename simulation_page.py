@@ -31,7 +31,7 @@ def page_Simulation():
 
     if stage in ("germinating", "seedling"):
         emoji ="🌱"
-    elif stage == "vegitative":
+    elif stage == "vegetative":
         emoji = "🌿"
     elif stage == "flowering":
         emoji = "🌼"
@@ -42,6 +42,6 @@ def page_Simulation():
     else:
         emoji = "🌱"
 
-    st.markdown(f"# {emoji}{stage.title()}")
+    st.markdown(f"# {emoji} {stage.title()}")
 
 
