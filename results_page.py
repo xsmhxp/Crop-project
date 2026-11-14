@@ -664,6 +664,12 @@ def _load_data():
 
 
 def page_Results():
+    # Nothing to show until the farmer fills in the Plan page
+    if not st.session_state.get("data"):
+        from style import hero
+        hero("📊", "Results", "Your predicted harvest, water needs, warnings and advice.")
+        st.info("Fill in the Plan page first.")
+        return
     inputs, sim, demo = _load_data()
     crop = CROPS[inputs["crop"]]
     yld = calc_yield(sim, inputs)
