@@ -1,0 +1,6 @@
+[theme]
+base = "dark"
+primaryColor = "#4CAF50"              # bright green: buttons, sliders, selected options
+backgroundColor = "#111813"           # very dark green-black page background
+secondaryBackgroundColor = "#1B251E"  # sidebar, input boxes
+textColor = "#E8F0EA"                 # off-white text
