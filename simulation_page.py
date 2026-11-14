@@ -1,4 +1,5 @@
 # Simulation page: the season day by day (slider, health, stage, charts)
+# Built by our team, with AI help (Claude) for styling and debugging.
 
 import altair as alt
 import pandas as pd

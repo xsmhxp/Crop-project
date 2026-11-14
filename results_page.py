@@ -1,3 +1,4 @@
+# The Results page was planned by our team and coded with AI assistance (Claude); we adapted it to our data and design and tested it.
 from datetime import date, datetime, timedelta
 
 import altair as alt

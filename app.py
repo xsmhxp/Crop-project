@@ -1,5 +1,5 @@
 # Farm Planner - main app (Plan page + navigation)
-# Run: python -m streamlit run app.py
+# Built by our team, with AI assistance (Claude) for styling and debugging.
 
 import folium
 import streamlit as st
