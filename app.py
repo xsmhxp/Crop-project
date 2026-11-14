@@ -8,7 +8,7 @@ from crops import CROPS, SOILS
 from results_page import page_Results
 from simulation_page import page_Simulation
 
-st.set_page_config(page_title="My App", page_icon="🚀", layout="wide")  # must be the FIRST st. line
+st.set_page_config(page_title="Farm Planner", page_icon="🌾", layout="wide")  # must be the FIRST st. line
 
 st.session_state.setdefault("Plan", "Simulation")
 st.session_state.setdefault("Results", None)
@@ -41,10 +41,13 @@ def save_data():
 
 
 def page_Plan():
-    st.header("Plan")
+    st.title("🗺️ Plan your farm")
+    st.caption("Pick your field on the map, tell us about your farm, and we'll simulate "
+               "the growing season using NASA weather data.")
     left, right = st.columns(2)
 
     with left:
+        st.subheader("📍 Your field")
         st.caption("Zoom in and click on your field to set its location.")
         has_loc = st.session_state.loc_set
         center = [st.session_state.lat, st.session_state.lon] if has_loc else [20, 0]
@@ -72,7 +75,7 @@ def page_Plan():
         out = st_folium(
             m,
             height=450,
-            use_container_width=True,
+            use_container_width=True,  # st_folium still uses the old name
             returned_objects=["last_clicked"],
             key="farm_map",
         )
@@ -89,25 +92,35 @@ def page_Plan():
 
     with right:
         with st.container(border=True):
-            st.subheader("Farm location")
+            st.subheader("🧭 Farm location")
             if st.session_state.loc_set:
-                st.metric("Latitude", f"{st.session_state.lat:.5f}")
-                st.metric("Longitude", f"{st.session_state.lon:.5f}")
+                a, b = st.columns(2)
+                a.metric("Latitude", f"{st.session_state.lat:.5f}")
+                b.metric("Longitude", f"{st.session_state.lon:.5f}")
                 st.success("Location set ✔  Click the map again to change it.")
             else:
                 st.info("Click on your field on the map.")
         with st.container(border=True):
-            with st.form("farm_form"):
-                st.number_input("Enter the size of your farm in acres", 0.5, 100000.0, 30.0, key="farmsize")
-                st.selectbox("What is your soil type", list(SOILS), key="soil")
-                st.number_input("What is a realistic amount of water you could provide m³ per week", min_value=0.0, key="water")
-                st.selectbox("What crop do you want to grow", list(CROPS), key="crop")
-                st.date_input("Enter your planting date", key="date")
-                st.form_submit_button("Start simulation", on_click=save_data, type="primary")
+            st.subheader("🌾 Farm details")
+            with st.form("farm_form", border=False):
+                a, b = st.columns(2)
+                a.number_input("📐 Farm size (acres)", 0.5, 100000.0, 30.0, key="farmsize")
+                b.selectbox("🪨 Soil type", list(SOILS), key="soil",
+                            format_func=str.title)
+                st.number_input("💧 Water you can provide (m³ per week)", min_value=0.0,
+                                value=250.0, step=10.0, key="water",
+                                help="A realistic amount from your canal, well or tank.")
+                a, b = st.columns(2)
+                a.selectbox("🌱 Crop", list(CROPS), key="crop")
+                b.date_input("📅 Planting date", key="date")
+                st.form_submit_button("🚀 Start simulation", on_click=save_data,
+                                      type="primary", width="stretch")
             if st.session_state.get("form_error"):
                 st.error(st.session_state.form_error)
             
 with st.sidebar:
+    st.title("🌾 Farm Planner")
+    st.caption("Plan a crop with NASA weather data.")
     st.radio("Navigate", ["Plan", "Simulation", "Results"], key="page")
 
 if st.session_state.page == "Plan":
