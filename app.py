@@ -113,7 +113,7 @@ def page_Plan():
                 a.number_input("📐 Farm size (acres)", 0.5, 100000.0, 30.0, key="farmsize")
                 b.selectbox("🪨 Soil type", list(SOILS), key="soil", format_func=str.title)
                 st.number_input("💧 Water you can provide (m³ per week)", min_value=0.0,
-                                value=250.0, step=10.0, key="water",
+                                value=2500.0, step=100.0, key="water",
                                 help="A realistic amount from your canal, well or tank.")
                 a, b = st.columns(2)
                 a.selectbox("🌱 Crop", list(CROPS), key="crop")

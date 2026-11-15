@@ -39,6 +39,55 @@ CROPS = {
         stages=[("sprouting", 150), ("seedling", 350), ("vegetative", 700),
                 ("flowering", 1000), ("tuber bulking", 1500), ("mature", 99999)],
     ),
+    # Crops from our teammate's backend (base temp, Kc and season length are theirs)
+    "Onion": dict(
+        t_base=5, kc=(0.7, 1.05, 0.75), ky=1.1, max_yield_t_ha=40,
+        salt_limit=1.2, salt_slope=16.0, days=120,
+        stages=[("sprouting", 100), ("seedling", 300), ("vegetative", 700),
+                ("bulbing", 1200), ("mature", 99999)],
+    ),
+    "Cucumber": dict(
+        t_base=10, kc=(0.5, 1.0, 0.75), ky=1.1, max_yield_t_ha=30,
+        salt_limit=2.5, salt_slope=13.0, days=90,
+        stages=[("germinating", 60), ("seedling", 200), ("vegetative", 400),
+                ("flowering", 550), ("fruiting", 900), ("mature", 99999)],
+    ),
+    "Carrot": dict(
+        t_base=5, kc=(0.7, 1.05, 0.95), ky=1.0, max_yield_t_ha=40,
+        salt_limit=1.0, salt_slope=14.0, days=100,
+        stages=[("germinating", 120), ("seedling", 300), ("vegetative", 600),
+                ("root growth", 1100), ("mature", 99999)],
+    ),
+    "Cabbage": dict(
+        t_base=5, kc=(0.7, 1.05, 0.95), ky=0.95, max_yield_t_ha=50,
+        salt_limit=1.8, salt_slope=9.7, days=100,
+        stages=[("germinating", 80), ("seedling", 250), ("vegetative", 600),
+                ("head forming", 1100), ("mature", 99999)],
+    ),
+    "Spinach": dict(
+        t_base=5, kc=(0.7, 1.0, 0.95), ky=1.0, max_yield_t_ha=20,
+        salt_limit=2.0, salt_slope=7.6, days=60,
+        stages=[("germinating", 60), ("seedling", 200), ("vegetative", 600),
+                ("mature", 99999)],
+    ),
+    "Pepper": dict(
+        t_base=10, kc=(0.6, 1.05, 0.9), ky=1.1, max_yield_t_ha=25,
+        salt_limit=1.5, salt_slope=14.0, days=120,
+        stages=[("germinating", 80), ("seedling", 250), ("vegetative", 550),
+                ("flowering", 800), ("fruiting", 1200), ("mature", 99999)],
+    ),
+    "Cauliflower": dict(
+        t_base=5, kc=(0.7, 1.05, 0.95), ky=0.95, max_yield_t_ha=25,
+        salt_limit=1.8, salt_slope=9.7, days=100,
+        stages=[("germinating", 80), ("seedling", 250), ("vegetative", 600),
+                ("curd forming", 1100), ("mature", 99999)],
+    ),
+    "Eggplant": dict(
+        t_base=10, kc=(0.6, 1.05, 0.9), ky=1.0, max_yield_t_ha=35,
+        salt_limit=1.1, salt_slope=6.9, days=120,
+        stages=[("germinating", 80), ("seedling", 250), ("vegetative", 550),
+                ("flowering", 800), ("fruiting", 1200), ("mature", 99999)],
+    ),
 }
 
 # Water the soil can hold for plants, in mm per metre of soil (approximate)

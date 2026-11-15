@@ -8,6 +8,17 @@ import streamlit as st
 from crops import CROPS
 from results_page import fake_sim, COLORS, health_color
 from style import hero
+from backend import simulate
+
+
+# Remember results so the slider doesn't re-download the weather
+@st.cache_data(show_spinner=False)
+def run_sim(data_items):
+    sim = simulate(dict(data_items))
+    year = sim.attrs["weather_year"]
+    sim = sim.copy()
+    sim.attrs["weather_year"] = year
+    return sim
 
 
 def page_Simulation():
@@ -17,14 +28,21 @@ def page_Simulation():
         return
     data = st.session_state.data
 
-    # Daily simulation table (demo data for now, backend later)
-    sim = fake_sim(120, data)
+    # Daily simulation from the backend (NASA weather); demo data if it fails
+    try:
+        with st.spinner("Getting NASA weather data and simulating your season..."):
+            sim = run_sim(tuple(sorted(data.items())))
+        note = (f"Weather: NASA POWER data for {sim.attrs['weather_year']} "
+                f"(same dates, latest full year available).")
+    except Exception:
+        sim = fake_sim(120, data)
+        note = "Couldn't reach NASA right now, so this is demo data."
     st.session_state.sim = sim
 
     hero("🌱", "Simulation",
          f"{data['crop']} on {data['farmsize']:g} acres of {data['soil']} soil · "
          f"planted {data['plant_date']:%d %b %Y} · {data['water']:,.0f} m³ water per week")
-    st.info("Showing demo data")
+    st.info(note)
 
     # Day slider
     with st.container(border=True):
@@ -35,12 +53,15 @@ def page_Simulation():
 
     # Emoji for the growth stage
     stage = row["stage"]
-    if stage in ("germinating", "seedling"):
+    if stage in ("germinating", "sprouting", "seedling"):
         emoji = "🌱"
     elif stage == "vegetative":
         emoji = "🌿"
     elif stage == "flowering":
         emoji = "🌼"
+    elif stage in ("fruiting", "tuber bulking", "bulbing", "root growth",
+                   "head forming", "curd forming"):
+        emoji = "🧺"
     elif stage in ("grain fill", "mature"):
         emoji = "🌾"
     elif stage == "wilting":

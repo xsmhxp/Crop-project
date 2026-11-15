@@ -663,6 +663,62 @@ def _load_data():
     return inputs, prepare_sim(sim, inputs), demo
 
 
+@st.cache_data(show_spinner=False)
+def _best_months(data_items):
+    from backend import best_planting_months
+    out = best_planting_months(dict(data_items))
+    return out, out.attrs["weather_year"]
+
+
+def show_best_months(inputs):
+    """Compare planting on the 1st of each month: water needed and final health."""
+    with st.container(border=True):
+        st.subheader("📅 Best month to plant")
+        try:
+            with st.spinner("Trying every planting month with NASA weather..."):
+                keys = ("lat", "lng", "farmsize", "water", "soil", "crop")
+                months, year = _best_months(tuple((k, inputs[k]) for k in keys))
+        except Exception:
+            st.info("Couldn't reach NASA right now, try again in a minute.")
+            return
+
+        good = months[months.matures]
+        if good.empty:
+            st.warning(f"{inputs['crop']} doesn't fully mature here in any month. "
+                       "It may be too cold for this crop.")
+            return
+        best = good.sort_values(["health", "water_needed_m3_week"], ascending=[False, True]).iloc[0]
+        st.markdown(
+            f"#### Best month: **{best['month']}**, needing about "
+            f"**{best['water_needed_m3_week']:,.0f} m³/week** of irrigation.")
+
+        months = months.copy()
+        months["result"] = np.where(
+            ~months.matures, "Too cold to mature",
+            np.where(months.health >= 70, "Healthy", "Struggles with your water"))
+        chart = (
+            alt.Chart(months)
+            .mark_bar(cornerRadiusTopLeft=4, cornerRadiusTopRight=4)
+            .encode(
+                x=alt.X("month:N", sort=list(months.month), title="Planting month"),
+                y=alt.Y("water_needed_m3_week:Q", title="Irrigation needed (m³ per week)"),
+                color=alt.Color("result:N", title=None,
+                                scale=alt.Scale(domain=["Healthy", "Struggles with your water",
+                                                        "Too cold to mature"],
+                                                range=[COLORS["good"], COLORS["bad"], "#777777"]),
+                                legend=alt.Legend(orient="top")),
+                tooltip=["month", alt.Tooltip("water_needed_m3_week:Q", title="m³/week", format=",.0f"),
+                         alt.Tooltip("health:Q", title="Final health"), "result"],
+            )
+            .properties(height=260)
+        )
+        user_line = (alt.Chart(pd.DataFrame({"y": [inputs["water"]]}))
+                     .mark_rule(color="white", strokeDash=[5, 4]).encode(y="y:Q"))
+        show_chart(chart + user_line)
+        st.caption(f"Planting on the 1st of each month, using NASA POWER weather from {year}. "
+                   "White dashed line = the water you said you have. Lower bars need less irrigation.")
+
+
 def page_Results():
     # Nothing to show until the farmer fills in the Plan page
     if not st.session_state.get("data"):
@@ -783,12 +839,16 @@ def page_Results():
                     st.markdown(f"**{r['icon']} {r['title']}**")
                     st.caption(r["reason"])
 
+    # ---------------- Best month to plant (teammate's planner idea) ----------------
+    if not demo:
+        show_best_months(inputs)
+
     # ---------------- Season details ----------------
     with st.expander("📈 Season details (charts and daily table)"):
         t1, t2, t3, t4 = st.tabs(["Soil moisture & rain", "Temperature", "Stress & salinity", "Daily table"])
         with t1:
             show_chart(chart_moisture_rain(sim))
-            st.caption("Shaded area = real forecast. After that, long-term climate averages.")
+            st.caption("Daily soil moisture and rain from the simulation.")
         with t2:
             show_chart(chart_temperature(sim))
             st.caption("Band = daily min to max, line = mean. Dashed lines at 0 °C (frost) and 35 °C (heat).")
@@ -803,7 +863,8 @@ def page_Results():
 
     st.caption(
         "Sources: FAO-56 (crop water use), FAO-33 (yield response to water), "
-        "Maas & Hoffman (salinity), NASA POWER (weather data).")
+        "Maas & Hoffman (salinity), NASA POWER (rain, temperature, humidity, wind, "
+        "sunlight and root-zone soil wetness).")
 
 
 if __name__ == "__main__":
