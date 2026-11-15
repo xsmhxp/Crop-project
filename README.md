@@ -2,7 +2,7 @@
 
 **Space science for every acre.**
 
-**Live app:** https://smart-farm-planner.streamlit.app
+**Live app:** https://astrocare.streamlit.app
 
 A web app that helps farmers plan a crop using real satellite and weather data. Click your field on a satellite map, enter your farm details, and the app simulates the whole growing season day by day. It tells you how healthy your crop will be, how much water it needs, what could go wrong, and the best time to plant.
 
