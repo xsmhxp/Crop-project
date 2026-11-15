@@ -53,7 +53,7 @@ The **Year plan** simulates every crop × planting month, keeps the ones that ma
 
 - **Saim Mehdi**: Frontend (Streamlit app, map, pages, charts, design)
 - **Muhammad Momin Khan**: Backend (crop model: water balance, Ks water stress, Kc stages, GDD, irrigation, drainage, crop data, and the year planner logic)
-- **Muhammad Amanullah**: Pitch & support (pitch/demo video and team support)
+- **Mohammad AmanUllah Akram Khokhar**: Pitch & support (pitch/demo video and team support)
 
 ## Use of AI
 
