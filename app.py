@@ -1,4 +1,4 @@
-# Farm Planner - main app (Plan page + navigation)
+# AstroCare - main app (Plan page + navigation)
 # Built by our team, with AI assistance (Claude) for styling and debugging.
 
 import folium
@@ -11,7 +11,7 @@ from simulation_page import page_Simulation
 from style import apply_style, hero
 from yearplan_page import page_YearPlan
 
-st.set_page_config(page_title="Farm Planner", page_icon="🌾", layout="wide")
+st.set_page_config(page_title="AstroCare", page_icon="🚀", layout="wide")
 apply_style()
 
 # Farm location (set by clicking the map)
@@ -127,8 +127,8 @@ def page_Plan():
 
 # ---------- Sidebar + page switching ----------
 with st.sidebar:
-    st.title("🌾 Farm Planner")
-    st.caption("Plan a crop with NASA weather data.")
+    st.title("🚀 AstroCare")
+    st.caption("Space science for every acre.")
     st.radio("Navigate", ["Plan", "Simulation", "Results", "Year plan"], key="page")
 
 if st.session_state.page == "Plan":

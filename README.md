@@ -1,4 +1,6 @@
-# 🌾 Smart Farm Planner
+# 🚀 AstroCare
+
+**Space science for every acre.**
 
 **Live app:** https://smart-farm-planner.streamlit.app
 
@@ -49,9 +51,9 @@ The **Year plan** simulates every crop × planting month, keeps the ones that ma
 
 ## Team
 
-- **Frontend** (Streamlit app, map, pages, charts, design)
-- **Backend** (crop model: water balance, Ks water stress, Kc stages, GDD, irrigation, drainage, crop data, and the year planner logic)
-- **Team member 3** (_add role_)
+- **Saim Mehdi**: Frontend (Streamlit app, map, pages, charts, design)
+- **Muhammad Momin Khan**: Backend (crop model: water balance, Ks water stress, Kc stages, GDD, irrigation, drainage, crop data, and the year planner logic)
+- **Muhammad Amanullah**: Pitch & support (pitch/demo video and team support)
 
 ## Use of AI
 
