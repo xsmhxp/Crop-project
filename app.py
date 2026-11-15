@@ -9,6 +9,7 @@ from crops import CROPS, SOILS
 from results_page import page_Results
 from simulation_page import page_Simulation
 from style import apply_style, hero
+from yearplan_page import page_YearPlan
 
 st.set_page_config(page_title="Farm Planner", page_icon="🌾", layout="wide")
 apply_style()
@@ -128,11 +129,13 @@ def page_Plan():
 with st.sidebar:
     st.title("🌾 Farm Planner")
     st.caption("Plan a crop with NASA weather data.")
-    st.radio("Navigate", ["Plan", "Simulation", "Results"], key="page")
+    st.radio("Navigate", ["Plan", "Simulation", "Results", "Year plan"], key="page")
 
 if st.session_state.page == "Plan":
     page_Plan()
 elif st.session_state.page == "Simulation":
     page_Simulation()
-else:
+elif st.session_state.page == "Results":
     page_Results()
+else:
+    page_YearPlan()

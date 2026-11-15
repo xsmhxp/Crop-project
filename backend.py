@@ -3,6 +3,7 @@
 # written by our teammate; adapted with AI assistance (Claude) to plug into the app.
 
 from datetime import date, timedelta
+from itertools import combinations
 from functools import lru_cache
 
 import numpy as np
@@ -196,6 +197,17 @@ def run_season(data, wx, plant, water_limit=True):
         ETc = Kc * eto
         ET_actual = Ks * ETc
 
+        # Crop water deficit (teammate's labels)
+        CWD = max(0, ETc - ET_actual)
+        if CWD == 0:
+            water_status = "No water deficit"
+        elif CWD <= 2:
+            water_status = "Low water deficit"
+        elif CWD <= 5:
+            water_status = "Moderate water deficit"
+        else:
+            water_status = "High water deficit"
+
         # Drainage and water balance
         D = max(0, Wt + rain + I - ET_actual - W_fc)
         ec_now = salt / Wt
@@ -231,6 +243,8 @@ def run_season(data, wx, plant, water_limit=True):
             "etc_mm": round(ETc, 2), "eta_mm": round(ET_actual, 2),
             "soil_moisture_pct": round((Wt - W_wp) / (W_fc - W_wp) * 100, 1),
             "water_stress": round(stress, 2),
+            "cwd_mm": round(CWD, 2),
+            "water_status": water_status,
             "salinity_ds_m": round(ec, 2),
             "gdd": round(cum_gdd, 1),
             "stage": stage,
@@ -289,3 +303,110 @@ def best_planting_months(data):
     out = pd.DataFrame(rows)
     out.attrs["weather_year"] = year
     return out
+
+
+# ---------------------------------------------------------------------------
+# Teammate's year planner: try every crop in every month, keep the good ones,
+# combine them into crop plans, check land + monthly water, rank the best plans
+# ---------------------------------------------------------------------------
+def _month_starts(start, n=12):
+    out, d = [], start
+    for _ in range(n):
+        out.append(d)
+        d = date(d.year + (d.month // 12), d.month % 12 + 1, 1)
+    return out
+
+
+def year_plan(data, max_crops_per_plan=4, top_n=5):
+    lat, lon = round(data["lat"], 4), round(data["lng"], 4)
+    land = data["farmsize"]
+    water_week = data["water"]
+
+    # 12-month planning window starting the month the farmer wants to plant
+    # (weather from the latest year NASA has)
+    first = data["plant_date"].replace(day=1)
+    latest = date.today() - timedelta(days=10)
+    shift = 0
+    while same_day(first, first.year - shift) + timedelta(days=366) > latest:
+        shift += 1
+    w_start = same_day(first, first.year - shift)
+    w_end = w_start + timedelta(days=365)
+    wx_all = get_nasa_weather(lat, lon, w_start, w_end)
+
+    # 1. Simulate every crop x month that finishes inside the window
+    candidates = []
+    for crop in crops:
+        days = sum(crops[crop]["stages"].values())
+        for start in _month_starts(w_start):
+            harvest = start + timedelta(days=days)
+            if harvest > w_end:
+                continue
+            sim = run_season({**data, "crop": crop}, wx_all.loc[pd.Timestamp(start):], start,
+                             water_limit=False)
+            matured = sim.gdd.iloc[-1] > CROPS[crop]["stages"][-2][1]
+            if not matured or sim.health.iloc[-1] < 70:     # filter_candidates
+                continue
+            # irrigation per acre for each calendar month (m³)
+            month_m3 = (sim.assign(m=sim.date.dt.to_period("M"))
+                        .groupby("m").irrigation_mm.sum() / 1000 * M2_PER_ACRE)
+            candidates.append({
+                "crop": crop, "start": start, "harvest": harvest,
+                "month_m3_per_acre": month_m3,
+                "water_per_acre": float(month_m3.sum()),
+            })
+
+    # 2. Rank by water use (rank_candidates), keep the best few, max 2 months per crop
+    candidates.sort(key=lambda c: c["water_per_acre"])
+    picked, per_crop = [], {}
+    for c in candidates:
+        if per_crop.get(c["crop"], 0) < 2:
+            picked.append(c)
+            per_crop[c["crop"]] = per_crop.get(c["crop"], 0) + 1
+        if len(picked) == 12:
+            break
+
+    # Water available per month (m³)
+    months = pd.period_range(w_start, w_end - timedelta(days=1), freq="M")
+    supply = pd.Series([water_week * m.days_in_month / 7 for m in months], index=months)
+
+    # 3. Try combinations (generate_combinations), check land + water (validate_schedule)
+    plans = []
+    for size in range(1, max_crops_per_plan + 1):
+        for group in combinations(picked, size):
+            if len({(g["crop"], g["start"]) for g in group}) < size:
+                continue
+            # Land: at most 2 crops growing at the same time, each on half the farm
+            busiest = max(sum(g["start"] <= d < g["harvest"] for g in group)
+                          for d in [g["start"] for g in group])
+            if busiest > 2:
+                continue
+            acres = land if busiest == 1 else land / 2
+            # Monthly irrigation of the whole plan (m³)
+            demand = pd.Series(0.0, index=months)
+            for g in group:
+                demand = demand.add(g["month_m3_per_acre"] * acres, fill_value=0)
+            demand = demand.reindex(months, fill_value=0)
+            if (demand > supply).any():                     # check_water
+                continue
+            plans.append({
+                "plantings": [{"crop": g["crop"], "start": g["start"], "harvest": g["harvest"],
+                               "acres": acres} for g in sorted(group, key=lambda g: g["start"])],
+                "harvests": size,
+                "harvested_acres": acres * size,
+                "total_water_m3": float(demand.sum()),
+                "monthly_m3": demand,
+            })
+
+    # 4. Rank plans (rank_cycles): most harvested land first, then least water
+    plans.sort(key=lambda p: (-p["harvested_acres"], p["total_water_m3"]))
+    top, seen = [], set()
+    for p in plans:
+        key = tuple(sorted(x["crop"] for x in p["plantings"]))
+        if key in seen:              # show different crop mixes, not the same one twice
+            continue
+        seen.add(key)
+        top.append(p)
+        if len(top) == top_n:
+            break
+    return {"plans": top, "supply": supply, "weather_year": w_start.year,
+            "window": (w_start, w_end), "tried": len(candidates)}

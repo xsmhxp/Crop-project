@@ -100,6 +100,11 @@ def page_Simulation():
             a.metric("🧂 Salinity (dS/m)", f"{row['salinity_ds_m']:.2f}")
             b.metric("⚠️ Water stress", f"{row['water_stress']:.0%}")
             c.metric("⏳ Days to harvest", len(sim) - day)
+            if "water_status" in row:
+                status = row["water_status"]
+                box = st.success if status.startswith(("No", "Low")) else (
+                    st.warning if status.startswith("Moderate") else st.error)
+                box(f"💧 {status} today ({row['cwd_mm']:.1f} mm short of what the crop wants)")
 
     # Season charts (white line = selected day)
     marker = (
