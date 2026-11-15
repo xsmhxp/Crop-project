@@ -58,7 +58,7 @@ The **Year plan** simulates every crop × planting month, keeps the ones that ma
 We used AI (Claude) as a coding assistant. The idea, the features and the crop model were ours. AI helped with:
 
 - styling (CSS) and debugging
-- writing the Results page code from our plan
+- helping with writing the Results page code from our plan
 - connecting our backend to the app: fetching NASA data in one request, Penman-Monteith ET0, and turning the backend into functions the pages can call
 - this README
 
